@@ -2,10 +2,14 @@
 
 from __future__ import annotations
 
+import logging
+
 import requests
 from django.conf import settings
 from requests.adapters import HTTPAdapter
 from urllib3.util.retry import Retry
+
+log = logging.getLogger(__name__)
 
 
 class UpstreamError(Exception):
@@ -23,9 +27,11 @@ def _build_session() -> requests.Session:
     retry = Retry(
         total=2,
         backoff_factor=0.6,
-        status_forcelist=(429, 500, 502, 503, 504),
+        # 429 is not retried here: rate-limit windows are a minute or longer, and
+        # get_json turns it into a clear message instead of a generic RetryError.
+        status_forcelist=(500, 502, 503, 504),
         allowed_methods=frozenset({"GET"}),
-        respect_retry_after_header=True,
+        raise_on_status=False,
     )
     adapter = HTTPAdapter(max_retries=retry, pool_connections=16, pool_maxsize=32)
     session.mount("https://", adapter)
@@ -50,7 +56,12 @@ def get_json(service: str, url: str, params: dict | None = None, timeout: float 
     except requests.RequestException as exc:
         raise UpstreamError(service, f"request failed ({exc.__class__.__name__})") from exc
     if resp.status_code == 429:
-        raise UpstreamError(service, "rate limit reached, please retry in a minute", 503)
+        try:
+            reason = resp.json().get("reason", "")
+        except ValueError:
+            reason = ""
+        log.warning("%s rate limited: %s", service, reason or resp.text[:200])
+        raise UpstreamError(service, f"rate limit reached ({reason or 'too many requests'}), please retry shortly", 503)
     if resp.status_code >= 400:
         raise UpstreamError(service, f"HTTP {resp.status_code}: {resp.text[:200]}")
     try:

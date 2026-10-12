@@ -17,8 +17,8 @@ from . import geo, weather
 from .risk import level_code
 
 CORRIDOR_MI = 40.0
-MAX_CELLS = 260
-MIN_CELL_MI = 6.0
+MAX_CELLS = 160
+MIN_CELL_MI = 8.0
 HOURS = 48
 
 

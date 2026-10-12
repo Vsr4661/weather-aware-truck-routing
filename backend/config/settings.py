@@ -54,10 +54,12 @@ TEMPLATES = [
 # The app is stateless: no models, no sessions, no auth.
 DATABASES = {}
 
+# File-based so every gunicorn worker shares cached routes and forecasts, which
+# keeps us well inside Open-Meteo's free per-minute quota.
 CACHES = {
     "default": {
-        "BACKEND": "django.core.cache.backends.locmem.LocMemCache",
-        "LOCATION": "truck-routing",
+        "BACKEND": "django.core.cache.backends.filebased.FileBasedCache",
+        "LOCATION": os.environ.get("CACHE_DIR", "/tmp/routecast-cache"),
         "OPTIONS": {"MAX_ENTRIES": 20000},
     }
 }

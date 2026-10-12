@@ -2,7 +2,9 @@
 
 A React + Django app that helps a truck driver pick the safest route from weather, load weight and travel time.
 
-**Live demo:** _add your Render URL here_ · **Walkthrough:** _add your Loom link here_
+**Live demo:** https://routecast-8pwa.onrender.com · **Walkthrough:** _add your Loom link here_
+
+> Hosted on Render's free plan: the first visit after ~15 idle minutes takes 30–60 s while the service wakes up.
 
 ![RouteCast: three routes, risk-coloured checkpoints, corridor heatmap and forecast slider](docs/screenshot.png)
 
@@ -35,7 +37,7 @@ frontend/ (Vite + React + TS)            backend/ (Django + DRF)
  PlaceInput ── GET /api/geocode ───────▶ geocoding.search        → Photon / Nominatim
 ```
 
-* **Stateless API.** No database. The heatmap request sends back the route paths, so any instance can answer it. Third-party responses are cached in-process (routes 1 h, forecasts 30 min, geocoding 24 h).
+* **Stateless API.** No database. The heatmap request sends back the route paths, so any instance can answer it. Third-party responses are cached in a file cache shared by all workers (routes 1 h, forecasts 30 min, geocoding 24 h).
 * **Routes render first.** `/api/plan` returns routes and risk quickly (simplified geometry, about 30 KB gzipped). The heatmap loads separately.
 * **Heatmap performance.** The grid is regular in Web-Mercator space, so each hour paints straight into a small canvas that MapLibre stretches over the corridor as one image source. Frames are pre-rendered during idle time and cached, so scrubbing or playing only swaps an image. There are no per-frame GeoJSON updates.
 
@@ -130,6 +132,6 @@ Returns `routes[]` (geometry, per-vertex miles and seconds, checkpoints with wea
 ## Limitations and next steps
 
 * **Car routing, adjusted for trucks.** The public OSRM server has no HGV profile, so there are no truck restrictions (bridge heights, hazmat). Swapping in an HGV-capable router such as OpenRouteService `driving-hgv`, GraphHopper or HERE only touches `routing.py`.
-* **Free-tier limits.** Open-Meteo's free tier allows about 600 location-calls per minute. A long trip at 10-mile spacing uses a few hundred (checkpoints are snapped to about 3.5 mi and de-duplicated; the heatmap is capped at 260 cells). Set `OPEN_METEO_API_KEY` for heavy use.
+* **Free-tier limits.** Open-Meteo's free tier allows about 600 location-calls per minute. A long trip at 10-mile spacing uses a few hundred (checkpoints are snapped to about 3.5 mi and de-duplicated; the heatmap is capped at 160 cells; responses are cached and shared across server workers). Set `OPEN_METEO_API_KEY` for heavy use.
 * **Forecast window.** Departures can be up to 7 days out, inside the 16-day forecast range.
 * **Display time zone.** Times show in the viewer's time zone, which is labelled next to the departure field.
