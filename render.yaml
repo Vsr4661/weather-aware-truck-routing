@@ -1,0 +1,17 @@
+# Render blueprint: New + > Blueprint > pick this repo.
+services:
+  - type: web
+    name: routecast
+    runtime: docker
+    plan: free
+    healthCheckPath: /api/health
+    envVars:
+      - key: DJANGO_SECRET_KEY
+        generateValue: true
+      - key: DJANGO_DEBUG
+        value: "0"
+      - key: DJANGO_ALLOWED_HOSTS
+        value: ".onrender.com"
+      # Optional: commercial Open-Meteo key for higher rate limits.
+      - key: OPEN_METEO_API_KEY
+        sync: false
