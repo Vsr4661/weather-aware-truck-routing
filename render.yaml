@@ -1,4 +1,6 @@
 # Render blueprint: New + > Blueprint > pick this repo.
+# Optional extra env var (add in the dashboard): OPEN_METEO_API_KEY for higher
+# weather API rate limits.
 services:
   - type: web
     name: routecast
@@ -12,6 +14,3 @@ services:
         value: "0"
       - key: DJANGO_ALLOWED_HOSTS
         value: ".onrender.com"
-      # Optional: commercial Open-Meteo key for higher rate limits.
-      - key: OPEN_METEO_API_KEY
-        sync: false
