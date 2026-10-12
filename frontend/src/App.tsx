@@ -149,7 +149,7 @@ export default function App() {
         )}
 
         <footer className="credits">
-          Routing © OSRM / OpenStreetMap · Weather © Open-Meteo · Geocoding © Photon
+          Routing © OSRM / OpenStreetMap · Weather © Open-Meteo, MET Norway · Geocoding © Photon
         </footer>
       </aside>
 

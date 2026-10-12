@@ -29,7 +29,7 @@ frontend/ (Vite + React + TS)            backend/ (Django + DRF)
  TripForm ── POST /api/plan ───────────▶ planner.build_plan
                                           ├─ routing.get_route_options  → OSRM (+ via-point alternatives)
                                           ├─ timeline.build_timeline    → truck ETAs, HOS stops
-                                          ├─ weather.fetch_hourly       → Open-Meteo (batched, cached)
+                                          ├─ weather.fetch_hourly       → Open-Meteo (batched, cached; MET Norway fallback)
                                           ├─ risk.assess                → level per checkpoint
                                           └─ recommendation.recommend   → ranking + reason
  MapView / ForecastPanel
@@ -49,6 +49,8 @@ frontend/ (Vite + React + TS)            backend/ (Django + DRF)
 * Wind and gusts are instantaneous values, so they are linearly interpolated between the two surrounding hours.
 * Rain, showers and snowfall are *preceding-hour sums*, so the hourly value is the in/hr rate. A truck passing at 14:20 uses the 15:00 bucket.
 * Rain = `rain + showers`. Open-Meteo reports convective showers separately, and leaving them out would miss thunderstorms.
+
+**Weather provider fallback.** Open-Meteo's free tier is metered per IP address. Free hosting such as Render routes many apps through shared IPs, and those other apps can use up the daily quota. When Open-Meteo refuses, the backend switches automatically to [MET Norway's Locationforecast](https://api.met.no/weatherapi/locationforecast/2.0/documentation) for the next 10 minutes. It is free, global and metered separately. Its data is converted to the same units and hour-bucket semantics: m/s to mph, mm to inches, precipitation split into rain or snow by the forecast's weather symbol (or freezing temperature), and snow depth at a 10:1 snow-to-water ratio. On a test trip the two providers' wind differed by about 2.6 mph on average and gave the same recommendation. MET has no gust data outside the Nordics, so with the fallback, gusts show the sustained speed. Gusts are display-only either way.
 
 Classification uses **sustained** wind. Gusts are shown alongside but not scored, because the spec's table says "Wind".
 

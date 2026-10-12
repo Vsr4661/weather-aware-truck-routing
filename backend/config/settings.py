@@ -100,7 +100,9 @@ OPEN_METEO_BASE_URL = os.environ.get(
     "OPEN_METEO_BASE_URL",
     "https://customer-api.open-meteo.com" if OPEN_METEO_API_KEY else "https://api.open-meteo.com",
 )
-HTTP_USER_AGENT = os.environ.get("HTTP_USER_AGENT", "WeatherAwareTruckRouting/1.0 (assessment project)")
+HTTP_USER_AGENT = os.environ.get(
+    "HTTP_USER_AGENT", "RouteCast/1.0 (+https://github.com/Vsr4661/weather-aware-truck-routing)"
+)
 
 LOGGING = {
     "version": 1,
