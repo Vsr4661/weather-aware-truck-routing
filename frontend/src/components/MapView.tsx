@@ -11,6 +11,14 @@ const STYLES = {
   dark: 'https://basemaps.cartocdn.com/gl/dark-matter-gl-style/style.json',
 }
 
+// Labels sit at different points along each route and open in different
+// directions, so routes that share a corridor don't stack their labels.
+const LABEL_PLACEMENT: Record<string, { at: number; anchor: 'bottom' | 'top' | 'left'; offset: [number, number] }> = {
+  A: { at: 0.5, anchor: 'bottom', offset: [0, -8] },
+  B: { at: 0.4, anchor: 'top', offset: [0, 8] },
+  C: { at: 0.62, anchor: 'left', offset: [10, 0] },
+}
+
 export interface MapFocus {
   routeId: string
   index: number // checkpoint index
@@ -275,14 +283,15 @@ export default function MapView(props: Props) {
     add(new maplibregl.Marker({ element: markerEl('pin pin-dest', '<span>B</span>') }).setLngLat([destination.lon, destination.lat]))
 
     for (const r of plan.routes) {
-      const mid = positionAt(r, r.trip_s * (r.id === 'A' ? 0.5 : r.id === 'B' ? 0.42 : 0.58)).point
+      const place = LABEL_PLACEMENT[r.id] ?? LABEL_PLACEMENT.A
+      const mid = positionAt(r, r.trip_s * place.at).point
       const rec = plan.recommendation.route_id === r.id
       const el = markerEl(
         `route-label${r.id === selectedId ? ' is-selected' : ''}`,
         `<b style="--c:${routeColor(r.id)}">${r.id}</b>${formatMiles(r.distance_mi)} · ${formatDuration(r.trip_s)}${rec ? ' <span class="star">★</span>' : ''}`,
       )
       el.addEventListener('click', () => live.current.onSelectRoute(r.id))
-      add(new maplibregl.Marker({ element: el, anchor: 'bottom', offset: [0, -8] }).setLngLat(mid))
+      add(new maplibregl.Marker({ element: el, anchor: place.anchor, offset: place.offset }).setLngLat(mid))
     }
 
     const selected = plan.routes.find((r) => r.id === selectedId)
